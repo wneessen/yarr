@@ -25,5 +25,4 @@ WORKDIR /yarr
 COPY --from=gobuilder /yarr/yarr ./
 
 EXPOSE 7070
-
 ENTRYPOINT ["./yarr"]
