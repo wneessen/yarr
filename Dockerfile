@@ -25,4 +25,4 @@ WORKDIR /yarr
 COPY --from=gobuilder /yarr/yarr ./
 
 EXPOSE 7070
-ENTRYPOINT ["./yarr"]
+ENTRYPOINT ["./yarr", "-addr", "0.0.0.0:7070"]
