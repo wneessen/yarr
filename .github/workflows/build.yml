@@ -1,144 +1,143 @@
-name: build
+name: Build
 
 on:
   push:
-    tags: ['v*', 'test*']
+    tags:
+      - v*
+  workflow_dispatch:
 
 jobs:
   build_macos:
     name: Build for MacOS
     runs-on: macos-13
     steps:
-    - name: "Checkout"
-      uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup Go
+      uses: actions/setup-go@v4
       with:
-        submodules: 'recursive'
-    - name: "Setup Go"
-      uses: actions/setup-go@v2
+        go-version: '^1.23'
+    - name: Build arm64 gui
+      uses: ./.github/actions/prepare
       with:
-        go-version: '^1.17'
-    - name: Cache Go Modules
-      uses: actions/cache@v2
+        id: darwin_arm64_gui
+        cmd: make darwin_arm64_gui
+        out: out/darwin_arm64_gui/yarr.app
+    - name: Build amd64 gui
+      uses: ./.github/actions/prepare
       with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-    - name: "Build"
-      run: make build_macos
-    - name: Upload
-      uses: actions/upload-artifact@v2
+        id: darwin_amd64_gui
+        cmd: make darwin_amd64_gui
+        out: out/darwin_amd64_gui/yarr.app
+    - name: Build arm64 cli
+      uses: ./.github/actions/prepare
       with:
-        name: macos
-        path: _output/macos/yarr.app
+        id: darwin_arm64
+        cmd: make darwin_arm64
+        out: out/darwin_arm64/yarr
+    - name: Build amd64 cli
+      uses: ./.github/actions/prepare
+      with:
+        id: darwin_amd64
+        cmd: make darwin_amd64
+        out: out/darwin_amd64/yarr
 
   build_windows:
     name: Build for Windows
     runs-on: windows-2022
     steps:
-    - name: "Checkout"
-      uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup Go
+      uses: actions/setup-go@v4
       with:
-        submodules: 'recursive'
-    - name: "Setup Go"
-      uses: actions/setup-go@v2
+        go-version: '^1.23'
+    - name: Build amd64 gui
+      uses: ./.github/actions/prepare
       with:
-        go-version: '^1.17'
-    - name: Cache Go Modules
-      uses: actions/cache@v2
+        id: windows_amd64_gui
+        cmd: make windows_amd64_gui
+        out: out/windows_amd64_gui/yarr.exe
+    - name: Build arm64 gui
+      if: false
+      uses: ./.github/actions/prepare
       with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-    - name: "Build"
-      run: make build_windows
-    - name: Upload
-      uses: actions/upload-artifact@v2
-      with:
-        name: windows
-        path: _output/windows/yarr.exe
+        id: windows_arm64_gui
+        cmd: make windows_arm64_gui
+        out: out/windows_arm64_gui/yarr.exe
 
-  build_linux:
-    name: Build for Linux
+  build_multi_cli:
+    name: Build for Windows/MacOS/Linux CLI
     runs-on: ubuntu-22.04
     steps:
-    - name: "Checkout"
-      uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup Go
+      uses: actions/setup-go@v4
       with:
-        submodules: 'recursive'
-    - name: "Setup Go"
-      uses: actions/setup-go@v2
+        go-version: '^1.23'
+    - name: Setup Zig
+      uses: mlugg/setup-zig@v1
       with:
-        go-version: '^1.17'
-    - name: Cache Go Modules
-      uses: actions/cache@v2
+        version: 0.14.0
+    - name: Build linux/amd64
+      uses: ./.github/actions/prepare
       with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-    - name: "Build"
-      run: make build_linux
-    - name: Upload
-      uses: actions/upload-artifact@v2
+        id: linux_amd64
+        cmd: make linux_amd64
+        out: out/linux_amd64/yarr
+    - name: Build linux/arm64
+      uses: ./.github/actions/prepare
       with:
-        name: linux
-        path: _output/linux/yarr
+        id: linux_arm64
+        cmd: make linux_arm64
+        out: out/linux_arm64/yarr
+    - name: Build linux/armv7
+      uses: ./.github/actions/prepare
+      with:
+        id: linux_armv7
+        cmd: make linux_armv7
+        out: out/linux_armv7/yarr
+    - name: Build windows/amd64
+      uses: ./.github/actions/prepare
+      with:
+        id: windows_amd64
+        cmd: make windows_amd64
+        out: out/windows_amd64/yarr
+    - name: Build windows/arm64
+      uses: ./.github/actions/prepare
+      with:
+        id: windows_arm64
+        cmd: make windows_arm64
+        out: out/windows_arm64/yarr
 
   create_release:
     name: Create Release
     runs-on: ubuntu-latest
-    if: ${{ !contains(github.ref, 'test') }}
-    needs: [build_macos, build_windows, build_linux]
+    needs: [build_macos, build_windows, build_multi_cli]
     steps:
-    - name: Create Release
-      uses: actions/create-release@v1
-      id: create_release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          draft: true
-          prerelease: true
     - name: Download Artifacts
       uses: actions/download-artifact@v4.1.7
       with:
         path: .
     - name: Preparation
       run: |
+        set -ex
         ls -R
-        chmod u+x macos/Contents/MacOS/yarr
-        chmod u+x linux/yarr
-
-        mv macos yarr.app     && zip -r yarr-macos.zip yarr.app
-        mv windows/yarr.exe . && zip yarr-windows.zip yarr.exe
-        mv linux/yarr .       && zip yarr-linux.zip yarr
-    - name: Upload MacOS
-      uses: actions/upload-release-asset@v1
+        for tarfile in `ls **/*.tar`; do
+          tar -xvf $tarfile
+        done
+        for dir in out/*; do
+          echo "Compressing: $dir"
+          (test -d "$dir" && cd $dir && zip -r ../yarr_`basename $dir`.zip *)
+        done
+        ls out
+    - name: Upload Release
+      uses: softprops/action-gh-release@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./yarr-macos.zip
-          asset_name: yarr-${{ github.ref }}-macos64.zip
-          asset_content_type: application/zip
-    - name: Upload Windows
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./yarr-windows.zip
-          asset_name: yarr-${{ github.ref }}-windows64.zip
-          asset_content_type: application/zip
-    - name: Upload Linux
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./yarr-linux.zip
-          asset_name: yarr-${{ github.ref }}-linux64.zip
-          asset_content_type: application/zip
+          draft: true
+          prerelease: true
+          files: |
+            out/*.zip

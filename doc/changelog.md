@@ -1,8 +1,15 @@
-# upcoming 
+# upcoming
+
+- (new) serve on unix socket (thanks to @rvighne)
+- (fix) smooth scrolling on iOS (thanks to gatheraled)
+
+# v2.5 (2025-03-26)
 
 - (new) Fever API support (thanks to @icefed)
 - (new) editable feed link (thanks to @adaszko)
 - (new) switch to feed by clicking the title in the article page (thanks to @tarasglek for suggestion)
+- (new) support multiple media links
+- (new) next/prev article navigation buttons (thanks to @tillcash)
 - (fix) duplicate articles caused by the same feed addition (thanks to @adaszko)
 - (fix) relative article links (thanks to @adazsko for the report)
 - (fix) atom article links stored in id element (thanks to @adazsko for the report)
@@ -10,6 +17,13 @@
 - (fix) sorting same-day batch articles (thanks to @lamescholar for the report)
 - (fix) showing login page in the selected theme (thanks to @feddiriko for the report)
 - (fix) parsing atom feeds with html elements (thanks to @tillcash & @toBeOfUse for the report, @krkk for the fix)
+- (fix) parsing feeds with missing guids (thanks to @hoyii for the report)
+- (fix) sending actual client version to servers (thanks to @aidanholm)
+- (fix) error caused by missing config dir (thanks to @timster)
+- (etc) load external images with no-referrer policy (thanks to @tillcash for the report)
+- (etc) open external links with no-referrer policy (thanks to @donovanglover)
+- (etc) show article content in the list if title is missing (thanks to @asimpson for suggestion)
+- (etc) accessibility improvements (thanks to @tseykovets)
 
 # v2.4 (2023-08-15)
 

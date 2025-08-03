@@ -25,18 +25,21 @@
                 <div class="flex-grow-1"></div>
                 <button class="toolbar-item"
                         :class="{active: filterSelected == 'unread'}"
+                        :aria-pressed="filterSelected == 'unread'"
                         title="Unread"
                         @click="filterSelected = 'unread'">
                     <span class="icon">{% inline "circle-full.svg" %}</span>
                 </button>
                 <button class="toolbar-item"
                         :class="{active: filterSelected == 'starred'}"
+                        :aria-pressed="filterSelected == 'starred'"
                         title="Starred"
                         @click="filterSelected = 'starred'">
                     <span class="icon">{% inline "star-full.svg" %}</span>
                 </button>
                 <button class="toolbar-item"
                         :class="{active: filterSelected == ''}"
+                        :aria-pressed="filterSelected == ''"
                         title="All"
                         @click="filterSelected = ''">
                     <span class="icon">{% inline "assorted.svg" %}</span>
@@ -59,10 +62,12 @@
 
                     <div class="dropdown-divider"></div>
 
-                    <header class="dropdown-header">Theme</header>
+                    <header class="dropdown-header" role="heading" aria-level="2">Theme</header>
                     <div class="row text-center m-0">
                         <button class="btn btn-link col-4 px-0 rounded-0"
                                 :class="'theme-'+t"
+                                :aria-label="t"
+                                :aria-pressed="theme.name == t"
                                 @click.stop="theme.name = t"
                                 v-for="t in ['light', 'sepia', 'night']">
                             <span class="icon" v-if="theme.name == t">{% inline "check.svg" %}</span>
@@ -71,25 +76,25 @@
 
                     <div class="dropdown-divider"></div>
 
-                    <header class="dropdown-header">Auto Refresh</header>
+                    <header class="dropdown-header" role="heading" aria-level="2">Auto Refresh</header>
                     <div class="row text-center m-0">
-                        <button class="dropdown-item col-4 px-0" :class="{active: !refreshRate}" @click.stop="refreshRate = 0">0</button>
-                        <button class="dropdown-item col-4 px-0" :class="{active: refreshRate == 10}" @click.stop="refreshRate = 10">10m</button>
-                        <button class="dropdown-item col-4 px-0" :class="{active: refreshRate == 30}" @click.stop="refreshRate = 30">30m</button>
-                        <button class="dropdown-item col-4 px-0" :class="{active: refreshRate == 60}" @click.stop="refreshRate = 60">1h</button>
-                        <button class="dropdown-item col-4 px-0" :class="{active: refreshRate == 120}" @click.stop="refreshRate = 120">2h</button>
-                        <button class="dropdown-item col-4 px-0" :class="{active: refreshRate == 240}" @click.stop="refreshRate = 240">4h</button>
+                        <button class="dropdown-item col-4 px-0" :aria-pressed="!refreshRate"       :class="{active: !refreshRate}"       @click.stop="refreshRate = 0">0</button>
+                        <button class="dropdown-item col-4 px-0" :aria-pressed="refreshRate == 10"  :class="{active: refreshRate == 10}"  @click.stop="refreshRate = 10">10m</button>
+                        <button class="dropdown-item col-4 px-0" :aria-pressed="refreshRate == 30"  :class="{active: refreshRate == 30}"  @click.stop="refreshRate = 30">30m</button>
+                        <button class="dropdown-item col-4 px-0" :aria-pressed="refreshRate == 60"  :class="{active: refreshRate == 60}"  @click.stop="refreshRate = 60">1h</button>
+                        <button class="dropdown-item col-4 px-0" :aria-pressed="refreshRate == 120" :class="{active: refreshRate == 120}" @click.stop="refreshRate = 120">2h</button>
+                        <button class="dropdown-item col-4 px-0" :aria-pressed="refreshRate == 240" :class="{active: refreshRate == 240}" @click.stop="refreshRate = 240">4h</button>
                     </div>
 
                     <div class="dropdown-divider"></div>
 
-                    <header class="dropdown-header">Show first</header>
+                    <header class="dropdown-header" role="heading" aria-level="2">Show first</header>
                     <div class="d-flex text-center">
-                        <button class="dropdown-item px-0" :class="{active: itemSortNewestFirst}" @click.stop="itemSortNewestFirst=true">New</button>
-                        <button class="dropdown-item px-0" :class="{active: !itemSortNewestFirst}" @click.stop="itemSortNewestFirst=false">Old</button>
+                        <button class="dropdown-item px-0" :aria-pressed="itemSortNewestFirst"  :class="{active: itemSortNewestFirst}"  @click.stop="itemSortNewestFirst=true">New</button>
+                        <button class="dropdown-item px-0" :aria-pressed="!itemSortNewestFirst" :class="{active: !itemSortNewestFirst}" @click.stop="itemSortNewestFirst=false">Old</button>
                     </div>
                     <div class="dropdown-divider"></div>
-                    <header class="dropdown-header">Subscriptions</header>
+                    <header class="dropdown-header" role="heading" aria-level="2">Subscriptions</header>
                     <form id="opml-import-form" enctype="multipart/form-data" tabindex="-1">
                         <input type="file"
                                id="opml-import"
@@ -117,7 +122,7 @@
                     </button>
                 </dropdown>
             </div>
-            <div id="feed-list-scroll" class="p-2 overflow-auto border-top flex-grow-1">
+            <div id="feed-list-scroll" class="p-2 overflow-auto scroll-touch border-top flex-grow-1">
                 <label class="selectgroup">
                     <input type="radio" name="feed" value="" v-model="feedSelected">
                     <div class="selectgroup-label d-flex align-items-center w-100">
@@ -206,12 +211,12 @@
                     <template v-slot:button>
                         <span class="icon">{% inline "more-horizontal.svg" %}</span>
                     </template>
-                    <header class="dropdown-header">{{ current.feed.title }}</header>
-                    <a class="dropdown-item" :href="current.feed.link" target="_blank" v-if="current.feed.link">
+                    <header class="dropdown-header" role="heading" aria-level="2">{{ current.feed.title }}</header>
+                    <a class="dropdown-item" :href="current.feed.link" rel="noopener noreferrer" target="_blank" referrerpolicy="no-referrer" v-if="current.feed.link">
                         <span class="icon mr-1">{% inline "globe.svg" %}</span>
                         Website
                     </a>
-                    <a class="dropdown-item" :href="current.feed.feed_link" target="_blank" v-if="current.feed.feed_link">
+                    <a class="dropdown-item" :href="current.feed.feed_link" rel="noopener noreferrer" target="_blank" referrerpolicy="no-referrer" v-if="current.feed.feed_link">
                         <span class="icon mr-1">{% inline "rss.svg" %}</span>
                         Feed Link
                     </a>
@@ -225,7 +230,7 @@
                         Change Link
                     </button>
                     <div class="dropdown-divider"></div>
-                    <header class="dropdown-header">Move to...</header>
+                    <header class="dropdown-header" role="heading" aria-level="2">Move to...</header>
                     <button class="dropdown-item"
                         v-if="folder.id != current.feed.folder_id"
                         v-for="folder in folders"
@@ -255,7 +260,7 @@
                     <template v-slot:button>
                         <span class="icon">{% inline "more-horizontal.svg" %}</span>
                     </template>
-                    <header class="dropdown-header">{{ current.folder.title }}</header>
+                    <header class="dropdown-header" role="heading" aria-level="2">{{ current.folder.title }}</header>
                     <button class="dropdown-item" @click="renameFolder(current.folder)">
                         <span class="icon mr-1">{% inline "edit.svg" %}</span>
                         Rename
@@ -267,7 +272,7 @@
                     </button>
                 </dropdown>
             </div>
-            <div id="item-list-scroll" class="p-2 overflow-auto border-top flex-grow-1" v-scroll="loadMoreItems" ref="itemlist">
+            <div id="item-list-scroll" class="p-2 overflow-auto scroll-touch border-top flex-grow-1" v-scroll="loadMoreItems" ref="itemlist">
                 <label v-for="item in items" :key="item.id"
                        class="selectgroup">
                     <input type="radio" name="item" :value="item.id" v-model="itemSelected">
@@ -326,17 +331,23 @@
                         title="Read Here">
                     <span class="icon" :class="{'icon-loading': loading.readability}">{% inline "book-open.svg" %}</span>
                 </button>
-                <a class="toolbar-item" :href="itemSelectedDetails.link" target="_blank" title="Open Link">
+                <a class="toolbar-item" :href="itemSelectedDetails.link" rel="noopener noreferrer" target="_blank" referrerpolicy="no-referrer" title="Open Link">
                     <span class="icon">{% inline "external-link.svg" %}</span>
                 </a>
                 <div class="flex-grow-1"></div>
+                <button class="toolbar-item" @click="navigateToItem(-1)" title="Previous Article" :disabled="itemSelected == items[0].id">
+                    <span class="icon">{% inline "chevron-left.svg" %}</span>
+                </button>
+                <button class="toolbar-item" @click="navigateToItem(+1)" title="Next Article" :disabled="itemSelected == items[items.length - 1].id">
+                    <span class="icon">{% inline "chevron-right.svg" %}</span>
+                </button>
                 <button class="toolbar-item" @click="itemSelected=null" title="Close Article">
                     <span class="icon">{% inline "x.svg" %}</span>
                 </button>
             </div>
             <div v-if="itemSelectedDetails"
                  ref="content"
-                 class="content px-4 pt-3 pb-5 border-top overflow-auto"
+                 class="content px-4 pt-3 pb-5 border-top overflow-auto scroll-touch"
                  :class="{'font-serif': theme.font == 'serif', 'font-monospace': theme.font == 'monospace'}"
                  :style="{'font-size': theme.size + 'rem'}">
                 <div class="content-wrapper">
@@ -351,8 +362,14 @@
                     </div>
                     <hr>
                     <div v-if="!itemSelectedReadability">
-                        <img :src="itemSelectedDetails.image" v-if="itemSelectedDetails.image" class="mb-3">
-                        <audio class="w-100" controls v-if="itemSelectedDetails.podcast_url" :src="itemSelectedDetails.podcast_url"></audio>
+                        <div v-if="contentImages.length">
+                            <figure v-for="media in contentImages">
+                                <img :src="media.url" loading="lazy">
+                                <figcaption v-if="media.description">{{ media.description }}</figcaption>
+                            </figure>
+                        </div>
+                        <audio class="w-100" controls v-for="media in contentAudios" :src="media.url"></audio>
+                        <video class="w-100" controls v-for="media in contentVideos" :src="media.url"></video>
                     </div>
                     <div v-html="itemSelectedContent"></div>
                 </div>

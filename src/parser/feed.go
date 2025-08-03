@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -119,6 +120,7 @@ func ParseAndFix(r io.Reader, baseURL, fallbackEncoding string) (*Feed, error) {
 	}
 	feed.TranslateURLs(baseURL)
 	feed.SetMissingDatesTo(time.Now())
+	feed.SetMissingGUIDs()
 	return feed, nil
 }
 
@@ -132,11 +134,14 @@ func (feed *Feed) cleanup() {
 		feed.Items[i].Title = strings.TrimSpace(htmlutil.ExtractText(item.Title))
 		feed.Items[i].Content = strings.TrimSpace(item.Content)
 
-		if item.ImageURL != "" && strings.Contains(item.Content, item.ImageURL) {
-			feed.Items[i].ImageURL = ""
-		}
-		if item.AudioURL != "" && strings.Contains(item.Content, item.AudioURL) {
-			feed.Items[i].AudioURL = ""
+		if len(feed.Items[i].MediaLinks) > 0 {
+			mediaLinks := make([]MediaLink, 0)
+			for _, link := range item.MediaLinks {
+				if !strings.Contains(item.Content, link.URL) {
+					mediaLinks = append(mediaLinks, link)
+				}
+			}
+			feed.Items[i].MediaLinks = mediaLinks
 		}
 	}
 }
@@ -167,4 +172,13 @@ func (feed *Feed) TranslateURLs(base string) error {
 		item.URL = siteUrl.ResolveReference(itemUrl).String()
 	}
 	return nil
+}
+
+func (feed *Feed) SetMissingGUIDs() {
+	for i, item := range feed.Items {
+		if item.GUID == "" {
+			id := strings.Join([]string{item.Title, item.Date.Format(time.RFC3339), item.URL}, ";;")
+			feed.Items[i].GUID = fmt.Sprintf("%x", sha256.Sum256([]byte(id)))
+		}
+	}
 }
